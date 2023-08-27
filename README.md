@@ -44,3 +44,9 @@ dune exec edo filename
 ```
 For now you have to figure out the keybindings for yourself. If you know VIM
 then it should be easy :)
+
+## TODO
+
+- Add more keybindings
+- Add scrolling functionality
+- Add syntax highlighting
