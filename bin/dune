@@ -1,0 +1,4 @@
+(executable
+ (public_name edo)
+ (name main)
+ (libraries edo ANSITerminal notty notty.unix))
