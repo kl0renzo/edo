@@ -38,3 +38,9 @@ Embark on your text editing odyssey with Edo today – because who needs a clear
 path when you can have an exhilarating rollercoaster through the thickets of
 imagination? 🌌📜
 
+## Usage
+```
+dune exec edo filename
+```
+For now you have to figure out the keybindings for yourself. If you know VIM
+then it should be easy :)

@@ -2,3 +2,8 @@
  (public_name edo)
  (name main)
  (libraries edo ANSITerminal notty notty.unix))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
