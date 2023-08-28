@@ -67,6 +67,20 @@ let insert_char char editor =
   ed := move_cursor_right !ed;
   editor
 
+let delete_char editor =
+  let content = editor.content in
+  let x, y = editor.cursor in
+  if y >= List.length content then editor
+  else
+    let line = List.nth content y in
+    if x >= String.length line || y >= List.length content then editor
+    else
+      let prefix = String.sub line 0 x in
+      let suffix = String.sub line (x + 1) (String.length line - x - 1) in
+      let new_line = String.concat "" [ prefix; suffix ] in
+      editor.content <- update_nth_element content y new_line;
+      editor
+
 let insert_at_nth_position lst n item =
   let rec insert_helper acc remaining count =
     match (remaining, count) with
@@ -154,8 +168,11 @@ let rec main_loop editor t =
       | `Key (`ASCII 'z', _) ->
           write_file editor;
           main_loop editor t (*todo save file, and maybe change keybinding*)
-      | `Key (`ASCII 'x', _) -> ()
-      | _ -> main_loop editor t)
+      | `Key (`ASCII 'x', _) ->
+          ed := delete_char editor;
+          main_loop !ed t
+      | `Key (`ASCII 'Z', _) -> ()
+      | _ -> main_loop editor t (*TODO: this should be delete char*))
   | Insert -> (
       match Term.event t with
       | `End | `Key (`Escape, []) ->
