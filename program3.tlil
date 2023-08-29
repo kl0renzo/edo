@@ -1,0 +1,4 @@
+(begin
+    (define adds (x -> (y -> (add x y))))
+    ((adds 2) 3)
+)
