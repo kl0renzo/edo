@@ -214,6 +214,9 @@ let rec main_loop editor t =
       | `Key (`ASCII 'o', _) ->
           ed := insert_new_line_above editor;
           main_loop editor t
+      | `Key (`ASCII 'O', _) ->
+          ed := insert_new_line_below editor;
+          main_loop editor t
       | `Key (`ASCII 'z', _) ->
           write_file editor;
           main_loop editor t (*todo save file, and maybe change keybinding*)
