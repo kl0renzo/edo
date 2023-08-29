@@ -10,10 +10,11 @@ type editor = {
   mutable cursor : cursor_position;
   mutable mode : modes;
   mutable filename : string;
+  mutable status : string;
 }
 
 let create_editor () =
-  { content = []; cursor = (0, 0); mode = Normal; filename = "" }
+  { content = []; cursor = (0, 0); mode = Normal; filename = ""; status = "" }
 
 (*
 TODO: limitiations on max cursor positions
@@ -131,16 +132,20 @@ let insert_mode editor =
   let x = if x > String.length line then String.length line else x in
   editor.cursor <- (x, y);
   editor.mode <- Insert;
+  editor.status <- "Insert Mode";
   editor
 
 let rec main_loop editor t =
   let ed = ref editor in
+  let status_image = I.string A.(fg black) editor.status in
   let text_images =
     List.map (fun line -> I.string A.(fg white) line) editor.content
   in
-  let combined_image = I.vcat text_images in
+  let combined_text_image = I.vcat text_images in
+  let combined_image = I.(status_image <-> hpad 1 0 combined_text_image) in
+  let cursor_pos = (fst editor.cursor, snd editor.cursor + 1) in
   Term.image t combined_image;
-  Term.cursor t (Some editor.cursor);
+  Term.cursor t (Some cursor_pos);
   match editor.mode with
   | Normal -> (
       match Term.event t with
@@ -177,6 +182,7 @@ let rec main_loop editor t =
       match Term.event t with
       | `End | `Key (`Escape, []) ->
           editor.mode <- Normal;
+          editor.status <- "Normal Mode";
           main_loop editor t
       | `Key (`ASCII c, _) ->
           ed := insert_char c editor;
@@ -201,6 +207,7 @@ let rec main_loop editor t =
       match Term.event t with
       | `End | `Key (`Escape, []) ->
           editor.mode <- Normal;
+          editor.status <- "Normal Mode";
           main_loop editor t
       | _ -> main_loop editor t)
 
@@ -215,9 +222,12 @@ let () =
     if Sys.file_exists filename then (
       let file_content = read_file filename in
       editor.content <- file_content;
+      editor.status <- "Normal Mode";
       let t = Term.create () in
       main_loop editor t)
-    else editor.content <- [ "" ];
-    (*TODO: fix issue when iserting and this is just []*)
-    let t = Term.create () in
-    main_loop editor t
+    else (
+      editor.content <- [ "" ];
+      editor.status <- "Normal Mode";
+      (*TODO: fix issue when iserting and this is just []*)
+      let t = Term.create () in
+      main_loop editor t)
