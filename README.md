@@ -53,6 +53,13 @@ then it should be easy :)
 
 ## TODO
 
-- Add more keybindings
-- Add scrolling functionality
-- Add syntax highlighting
+- [ ] Add more keybindings
+  - [ ] Use arrow keys to move in normal and insert mode
+- [ ] Info (shows mode, (x,y) position, filename)
+- [ ] show line numbers
+- [ ] Add scrolling functionality
+- [ ] Add syntax highlighting (maybe only check syntax highligthing when in
+  normal mode)
+- [ ] Add scrolling
+
+
