@@ -144,16 +144,16 @@ let rec main_loop editor t =
   match editor.mode with
   | Normal -> (
       match Term.event t with
-      | `Key (`ASCII 'h', _) ->
+      | `Key (`ASCII 'h', _) | `Key (`Arrow `Left,_) ->
           ed := move_cursor_left editor;
           main_loop !ed t
-      | `Key (`ASCII 'l', _) ->
+      | `Key (`ASCII 'l', _) | `Key (`Arrow `Right,_) ->
           ed := move_cursor_right editor;
           main_loop !ed t
-      | `Key (`ASCII 'k', _) ->
+      | `Key (`ASCII 'k', _) | `Key (`Arrow `Up,_) ->
           ed := move_cursor_up editor;
           main_loop !ed t
-      | `Key (`ASCII 'j', _) ->
+      | `Key (`ASCII 'j', _) | `Key (`Arrow `Down,_) ->
           ed := move_cursor_down editor;
           main_loop !ed t
       | `Key (`ASCII 'i', _) ->
@@ -184,6 +184,18 @@ let rec main_loop editor t =
       | `Key (`Enter, _) ->
           ed := insert_new_line_below editor;
           main_loop editor t
+      | `Key (`Arrow `Left,_) ->
+        ed := move_cursor_left editor;
+        main_loop !ed t
+      | `Key (`Arrow `Right,_) ->
+          ed := move_cursor_right editor;
+          main_loop !ed t
+      | `Key (`Arrow `Up,_) ->
+          ed := move_cursor_up editor;
+          main_loop !ed t
+      | `Key (`Arrow `Down,_) ->
+          ed := move_cursor_down editor;
+          main_loop !ed t
       | _ -> main_loop editor t)
   | Command -> (
       match Term.event t with
