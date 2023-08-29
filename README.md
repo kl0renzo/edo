@@ -40,7 +40,13 @@ imagination? 🌌📜
 
 ## Usage
 ```
-dune exec edo filename
+opam init
+opam update
+opam install notty
+opam install ANSITerminal
+eval (opam env)
+dune build
+dune exec edo <filename>
 ```
 For now you have to figure out the keybindings for yourself. If you know VIM
 then it should be easy :)
