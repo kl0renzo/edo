@@ -16,6 +16,16 @@ type editor = {
 let create_editor () =
   { content = []; cursor = (0, 0); mode = Normal; filename = ""; status = "" }
 
+let mode_to_string mode =
+  match mode with
+  | Insert -> "Insert Mode"
+  | Normal -> "Normal Mode"
+  | Command -> "Command Mode"
+
+let update_status editor =
+  let x,y = editor.cursor in
+  editor.status <- mode_to_string editor.mode ^ " | " ^ string_of_int x ^ "," ^ string_of_int y
+
 (*
 TODO: limitiations on max cursor positions
 *)
@@ -181,11 +191,11 @@ let insert_mode editor =
   let x = if x > String.length line then String.length line else x in
   editor.cursor <- (x, y);
   editor.mode <- Insert;
-  editor.status <- "Insert Mode";
   editor
 
 let rec main_loop editor t =
   let ed = ref editor in
+  update_status editor;
   let status_image = I.string A.(fg black) editor.status in
   let text_images =
     List.map (fun line -> I.string A.(fg white) line) editor.content
@@ -234,7 +244,6 @@ let rec main_loop editor t =
       match Term.event t with
       | `End | `Key (`Escape, []) ->
           editor.mode <- Normal;
-          editor.status <- "Normal Mode";
           main_loop editor t
       | `Key (`ASCII c, _) ->
           ed := insert_char c editor;
@@ -262,7 +271,6 @@ let rec main_loop editor t =
       match Term.event t with
       | `End | `Key (`Escape, []) ->
           editor.mode <- Normal;
-          editor.status <- "Normal Mode";
           main_loop editor t
       | _ -> main_loop editor t)
 
@@ -277,12 +285,14 @@ let () =
     if Sys.file_exists filename then (
       let file_content = read_file filename in
       editor.content <- file_content;
-      editor.status <- "Normal Mode";
+      editor.mode <- Normal;
+      update_status editor;
       let t = Term.create () in
       main_loop editor t)
     else (
       editor.content <- [ "" ];
-      editor.status <- "Normal Mode";
+      editor.mode <- Normal;
+      update_status editor;
       (*TODO: fix issue when iserting and this is just []*)
       let t = Term.create () in
       main_loop editor t)
