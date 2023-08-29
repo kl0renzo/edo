@@ -225,7 +225,7 @@ let rec main_loop editor t =
       | `Key (`ASCII 'z', _) ->
           write_file editor;
           main_loop editor t (*todo save file, and maybe change keybinding*)
-      | `Key (`ASCII 'x', _) ->
+      | `Key (`ASCII 'x', _) | `Key (`Delete, _) ->
           ed := delete_char editor;
           main_loop !ed t
       | `Key (`ASCII 'Z', _) -> ()
