@@ -55,6 +55,29 @@ let rec update_nth_element lst n new_value =
       if n = 0 then new_value :: tl
       else hd :: update_nth_element tl (n - 1) new_value
 
+let rec get_nth n lst =
+  match lst with
+  | [] -> failwith "Index out of bounds"
+  | hd :: tl -> if n = 0 then hd else get_nth (n - 1) tl
+
+let move_cursor_to_max_right editor : editor =
+  let _, y = editor.cursor in
+  let line = get_nth y editor.content in
+  editor.cursor <- (String.length line, y);
+  editor
+
+let rec remove_nth_element n lst =
+  match lst with
+  | [] -> []
+  | hd :: tl -> if n = 0 then tl else hd :: remove_nth_element (n - 1) tl
+
+let combine_lines x y editor =
+  let lst = editor.content in
+  let line_1 = get_nth x lst in
+  let line_2 = get_nth y lst in
+  editor.content <- update_nth_element lst x (line_1 ^ line_2);
+  editor
+
 let insert_char char editor =
   let content = editor.content in
   let x, y = editor.cursor in
@@ -73,13 +96,39 @@ let delete_char editor =
   if y >= List.length content then editor
   else
     let line = List.nth content y in
-    if x >= String.length line || y >= List.length content then editor
+    if x >= String.length line then editor
     else
       let prefix = String.sub line 0 x in
       let suffix = String.sub line (x + 1) (String.length line - x - 1) in
       let new_line = String.concat "" [ prefix; suffix ] in
       editor.content <- update_nth_element content y new_line;
       editor
+
+let delete_char_before editor =
+  let ed = ref editor in
+  let content = editor.content in
+  let x, y = editor.cursor in
+  match (x, y) with
+  | x, y when x = 0 && y = 0 -> editor
+  | _, y when y > List.length content -> editor
+  | _ -> (
+      let line = List.nth content y in
+      match x with
+      | x when x > String.length line -> editor
+      | x when x = 0 ->
+          ed := combine_lines (y - 1) y editor;
+          editor.content <- remove_nth_element y editor.content;
+          ed := move_cursor_up !ed;
+          ed := move_cursor_to_max_right !ed;
+          editor
+      | _ ->
+          let prefix = String.sub line 0 (x - 1) in
+          let suffix = String.sub line x (String.length line - x) in
+          let new_line = String.concat "" [ prefix; suffix ] in
+          editor.content <- update_nth_element content y new_line;
+          let ed = ref editor in
+          ed := move_cursor_left !ed;
+          editor)
 
 let insert_at_nth_position lst n item =
   let rec insert_helper acc remaining count =
@@ -196,6 +245,9 @@ let rec main_loop editor t =
       | `Key (`Arrow `Down,_) ->
           ed := move_cursor_down editor;
           main_loop !ed t
+      | `Key (`Backspace, _) ->
+          ed := delete_char_before editor;
+          main_loop editor t
       | _ -> main_loop editor t)
   | Command -> (
       match Term.event t with
