@@ -55,11 +55,13 @@ then it should be easy :)
 
 - [ ] Add more keybindings
   - [x] Use arrow keys to move in normal and insert mode
-- [ ] Info (shows mode, (x,y) position, filename)
+  - [ ] Add keybindings that work in Command mode
+- [x] Info (shows mode, (x,y) position, filename)
 - [ ] show line numbers
-- [ ] Add scrolling functionality
-- [ ] Add syntax highlighting (maybe only check syntax highligthing when in
+- [x] Add scrolling functionality
+- [ ] Add syntax highlighting (maybe only check syntax highlighting when in
   normal mode)
-- [ ] Add scrolling
-
-
+  - [ ] Obvious syntactic errors like unbalanced braces
+  - [ ] Other occurrences of a name pointed to by the cursor
+  - [ ] The matching brace when the cursor points to a brace
+  - [ ] Similar useful things depending on the language
