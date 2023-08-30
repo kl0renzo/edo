@@ -27,7 +27,7 @@ let create_editor () =
   }
 
 module Editor = struct
-  let create_editor = create_editor ()
+  create_editor ()
 
   (*this is the real position in the file, editor.cursor is the position in the visible field
     the real position is needed for file editing
@@ -46,7 +46,7 @@ let mode_to_string mode =
 let update_status editor =
   let x, y = editor.cursor in
   editor.status <-
-    mode_to_string editor.mode ^ " | " ^ string_of_int x ^ "," ^ string_of_int y
+    mode_to_string editor.mode ^ " | " ^ string_of_int x ^ "," ^ string_of_int (y + editor.scroll_position)
 
 (*
 TODO: limitiations on max cursor positions
