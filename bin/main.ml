@@ -46,7 +46,9 @@ let mode_to_string mode =
 let update_status editor =
   let x, y = editor.cursor in
   editor.status <-
-    mode_to_string editor.mode ^ " | " ^ string_of_int x ^ "," ^ string_of_int (y + editor.scroll_position)
+    editor.filename  ^ " | "
+    ^ mode_to_string editor.mode ^ " | "
+    ^ string_of_int x ^ "," ^ string_of_int (y + editor.scroll_position)
 
 (*
 TODO: limitiations on max cursor positions
