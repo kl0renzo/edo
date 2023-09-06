@@ -1,7 +1,7 @@
 (executable
  (public_name edo)
  (name main)
- (libraries edo ANSITerminal notty notty.unix))
+ (libraries edo str ANSITerminal notty notty.unix))
 
 (env
  (dev
