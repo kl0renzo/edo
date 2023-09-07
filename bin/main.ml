@@ -293,7 +293,7 @@ let highlight_lines lines color_array =
     match List.nth (List.nth color_array ii) i with
     | Normal -> I.(string A.(fg white) line)
     | Bracet -> I.(string A.(fg green ++ bg cyan) line)
-    | MatchedWord -> I.(string A.(fg red) line)
+    | MatchedWord -> I.(string A.(fg red ++ bg white) line)
   in
 
   List.mapi (fun j ll -> List.mapi (fun i line -> map_line i line j) ll) lines
@@ -338,6 +338,15 @@ let find_matching_open_brace content x y =
   List.iteri iter_lines content;
   Stack.pop_opt s
 
+
+
+let mark_matched_words parsed_lines codes x pos_word = 
+  let word = List.nth (List.nth parsed_lines x) pos_word in
+  let check_word x y = if List.nth (List.nth parsed_lines x) y = word then true else false in 
+  List.mapi (fun i line -> List.mapi (fun ii word -> (
+    if check_word i ii then (MatchedWord) else word 
+  ))line) codes
+
 let highlight parsed_lines cursor =
   let codes = List.map (List.map (fun _ -> Normal)) parsed_lines in
   let line_as_str i = String.concat "" (List.nth parsed_lines i) in
@@ -370,6 +379,11 @@ let highlight parsed_lines cursor =
                 else x)
               codes
         | None -> codes
+      else if current_char != ' ' then  begin 
+         let pos = find_position_in_array (List.nth parsed_lines x) 0 0 y in
+         let codes_with_matched_words = mark_matched_words parsed_lines codes x pos in
+         codes_with_matched_words 
+        end
       else codes
   | _, _ -> codes
 
