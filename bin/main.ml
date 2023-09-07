@@ -292,7 +292,7 @@ let highlight_lines lines color_array =
     (* the colors can be changed depending on the user theme *)
     match List.nth (List.nth color_array ii) i with
     | Normal -> I.(string A.(fg white) line)
-    | Bracet -> I.(string A.(fg green ++ bg cyan) line)
+    | Bracet -> I.(string A.(fg green ++ bg white) line)
     | MatchedWord -> I.(string A.(fg red ++ bg white) line)
   in
 
