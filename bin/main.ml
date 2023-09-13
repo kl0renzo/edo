@@ -309,7 +309,7 @@ let find_matching_close_brace content x y =
           if x + 1 + xx < List.length content || y + 1 + yy < List.length v then
             match vv with
             | "(" ->
-                let _ = Stack.pop s in
+                let _ = Stack.pop_opt s in
                 ()
             | ")" ->
                 Stack.push
@@ -330,7 +330,7 @@ let find_matching_open_brace content x y =
           if xx < x || yy < y then
             match vv with
             | ")" ->
-                let _ = Stack.pop s in
+                let _ = Stack.pop_opt s in
                 ()
             | "(" -> Stack.push (xx, yy) s
             | _ -> ())
