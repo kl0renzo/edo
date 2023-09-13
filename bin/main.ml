@@ -4,7 +4,7 @@ open Notty_unix
 
 type cursor_position = int * int
 type modes = Insert | Normal | Command
-type to_color = Normal | Bracet | MatchedWord
+type to_color = Normal | Bracet | Error | MatchedWord
 
 type editor = {
   mutable content : string list;
@@ -293,6 +293,7 @@ let highlight_lines lines color_array =
     match List.nth (List.nth color_array ii) i with
     | Normal -> I.(string A.(fg white) line)
     | Bracet -> I.(string A.(fg green ++ bg white) line)
+    | Error -> I.(string A.(fg black ++ bg red) line)
     | MatchedWord -> I.(string A.(fg red ++ bg white) line)
   in
 
@@ -338,6 +339,35 @@ let find_matching_open_brace content x y =
   List.iteri iter_lines content;
   Stack.pop_opt s
 
+let find_unmatched_braces content =
+  let stack = Stack.create () in
+  let unmatched_braces = ref [] in
+
+  let check_brace x y c =
+    match c with
+    | "(" -> Stack.push (x, y) stack
+    | ")" ->
+        if Stack.is_empty stack then
+          unmatched_braces := (x, y) :: !unmatched_braces
+        else
+          let _ = Stack.pop stack in
+          ()
+    | _ -> ()
+  in
+
+  List.iteri
+    (fun x line ->
+      List.iteri (fun y c -> check_brace x y c) line)
+    content;
+
+  (* Add any remaining unmatched opening parentheses to the list *)
+  while not (Stack.is_empty stack) do
+    let x, y = Stack.pop stack in
+    unmatched_braces := (x, y) :: !unmatched_braces
+  done;
+
+  !unmatched_braces
+
 let mark_matched_words parsed_lines codes x pos_word =
   let word = List.nth (List.nth parsed_lines x) pos_word in
   let check_word x y =
@@ -350,9 +380,22 @@ let mark_matched_words parsed_lines codes x pos_word =
         line)
     codes
 
-let highlight parsed_lines cursor =
+(* Mark unmatched opening parentheses with a specific color *)
+let mark_unmatched_braces color_codes brace_positions =
+    List.mapi
+      (fun i line ->
+        List.mapi
+          (fun ii word ->
+            if List.mem (i, ii) brace_positions then Error else word)
+          line)
+      color_codes
+
+let highlight parsed_lines cursor unmatched_braces =
   let codes = List.map (List.map (fun _ -> Normal)) parsed_lines in
   let line_as_str i = String.concat "" (List.nth parsed_lines i) in
+
+  let codes = mark_unmatched_braces codes unmatched_braces in
+
   match cursor with
   | y, x when x < List.length parsed_lines && y < String.length (line_as_str x)
     ->
@@ -396,7 +439,8 @@ let rec main_loop editor t =
   update_status editor;
   let status_image = I.string A.(fg blue) editor.status in
   let parsed_lines = parse_input editor in
-  let highlight_code = highlight parsed_lines editor.cursor in
+  let unmatched_braces = find_unmatched_braces parsed_lines in
+  let highlight_code = highlight parsed_lines editor.cursor unmatched_braces in
   let parsed_highlighted_lines = highlight_lines parsed_lines highlight_code in
   let text_images = List.map I.hcat parsed_highlighted_lines in
   let combined_text_image = I.vcat text_images in
