@@ -44,6 +44,7 @@ let mode_to_string mode =
   | Normal -> "Normal Mode"
   | Command -> "Command Mode"
 
+(** displays the current status of the editor *)
 let update_status editor =
   let x, y = editor.cursor in
   editor.status <-
@@ -51,9 +52,7 @@ let update_status editor =
     ^ string_of_int x ^ ","
     ^ string_of_int (y + editor.scroll_position)
 
-(*
-TODO: limitiations on max cursor positions
-*)
+(** moves cursor to the left, if on the left side does nothing *)
 let move_cursor_left editor : editor =
   let x, y = editor.cursor in
   match x with
@@ -64,22 +63,24 @@ let move_cursor_left editor : editor =
       editor.cursor <- (x - 1, y);
       editor
 
+(** moves cursor to the right *)
 let move_cursor_right editor : editor =
   let x, y = editor.cursor in
   editor.cursor <- (x + 1, y);
   editor
 
+(** moves cursor down *)
 let move_cursor_down editor : editor =
   let x, y = editor.cursor in
   match y with
   | y when y = editor.visible_lines - 2 ->
-      (*TODO why -2*)
       editor.scroll_position <- editor.scroll_position + 1;
       editor
   | _ ->
       editor.cursor <- (x, y + 1);
       editor
 
+(** moves cursor up, if on top does nothing*)
 let move_cursor_up editor : editor =
   let x, y = editor.cursor in
   match y with
@@ -93,6 +94,7 @@ let move_cursor_up editor : editor =
       editor.cursor <- (x, y - 1);
       editor
 
+(** updates the nth element of a list *)
 let rec update_nth_element lst n new_value =
   match lst with
   | [] -> []
@@ -100,11 +102,19 @@ let rec update_nth_element lst n new_value =
       if n = 0 then new_value :: tl
       else hd :: update_nth_element tl (n - 1) new_value
 
+(** gets the nth element of a list *)
 let rec get_nth n lst =
   match lst with
   | [] -> failwith "Index out of bounds"
   | hd :: tl -> if n = 0 then hd else get_nth (n - 1) tl
 
+(** removes the nth element from a list *)
+let rec remove_nth_element n lst =
+  match lst with
+  | [] -> []
+  | hd :: tl -> if n = 0 then tl else hd :: remove_nth_element (n - 1) tl
+
+(** creates a sublist from a list between to indices *)
 let rec sublist_from_to lst x y =
   match lst with
   | [] -> []
@@ -112,22 +122,20 @@ let rec sublist_from_to lst x y =
   | hd :: tl when y >= 0 -> hd :: sublist_from_to tl (x - 1) (y - 1)
   | _ -> []
 
+(** moves cursor to the maximum right position *)
 let move_cursor_to_max_right editor : editor =
   let _, y = Editor.get_pos editor in
   let line = get_nth y editor.content in
   editor.cursor <- (String.length line, y - editor.scroll_position);
   editor
 
+(** moves cursor to the maximum left position *)
 let move_cursor_to_max_left editor : editor =
   let _, y = Editor.get_pos editor in
   editor.cursor <- (0, y - editor.scroll_position);
   editor
 
-let rec remove_nth_element n lst =
-  match lst with
-  | [] -> []
-  | hd :: tl -> if n = 0 then tl else hd :: remove_nth_element (n - 1) tl
-
+(** combines two lines *)
 let combine_lines x y editor =
   let lst = editor.content in
   let line_1 = get_nth x lst in
@@ -135,6 +143,7 @@ let combine_lines x y editor =
   editor.content <- update_nth_element lst x (line_1 ^ line_2);
   editor
 
+(** inserts a char at the position of the cursor (+ scroll offset) *)
 let insert_char char editor =
   let content = editor.content in
   let x, y = Editor.get_pos editor in
@@ -147,6 +156,7 @@ let insert_char char editor =
   ed := move_cursor_right !ed;
   editor
 
+(** deletes a char at the position after the cursor (+ scroll offset) *)
 let delete_char_after editor =
   let content = editor.content in
   let x, y = Editor.get_pos editor in
@@ -161,6 +171,7 @@ let delete_char_after editor =
       editor.content <- update_nth_element content y new_line;
       editor
 
+(** deletes a char at the position before the cursor (+ scroll offset) *)
 let delete_char_before editor =
   let ed = ref editor in
   let content = editor.content in
@@ -187,6 +198,7 @@ let delete_char_before editor =
           ed := move_cursor_left !ed;
           editor)
 
+(** inserts an item at the nth position of a list *)
 let insert_at_nth_position lst n item =
   let rec insert_helper acc remaining count =
     match (remaining, count) with
@@ -196,6 +208,7 @@ let insert_at_nth_position lst n item =
   in
   if n < 0 then invalid_arg "Negative index" else insert_helper [] lst n
 
+(** inserts a line above the cursor *)
 let insert_line_above editor =
   let content = editor.content in
   let _, y = Editor.get_pos editor in
@@ -205,6 +218,7 @@ let insert_line_above editor =
   ed := move_cursor_up editor;
   editor
 
+(** inserts a line below the cursor *)
 let insert_line_below editor =
   let content = editor.content in
   let _, y = Editor.get_pos editor in
@@ -214,6 +228,7 @@ let insert_line_below editor =
   ed := move_cursor_to_max_left editor;
   editor
 
+(** reads the content of a file and creates a list of lines *)
 let read_file filename =
   let lines = ref [] in
   let chan = open_in filename in
@@ -226,6 +241,7 @@ let read_file filename =
     close_in chan;
     List.rev !lines
 
+(** saves the file *)
 let write_file editor =
   let filename = editor.filename in
   let content = editor.content in
@@ -233,6 +249,7 @@ let write_file editor =
   List.iter (fun line -> output_string output_channel (line ^ "\n")) content;
   close_out output_channel
 
+(** sets the mode of the editor to insert - no commands,...*)
 let insert_mode editor =
   let content = editor.content in
   let x, y = Editor.get_pos editor in
@@ -243,6 +260,7 @@ let insert_mode editor =
   editor.mode <- Insert;
   editor
 
+(** gets the visible content of the editor - needed for scrolling *)
 let get_visible_content editor : string list =
   let visible_lines = editor.visible_lines in
   let start_index = editor.scroll_position in
@@ -251,6 +269,7 @@ let get_visible_content editor : string list =
   in
   sublist_from_to editor.content start_index end_index
 
+(** split a string into words *)
 let split_string_with_whitespace input_string =
   let rec split_acc input acc current_word =
     match input with
@@ -275,10 +294,12 @@ let split_string_with_whitespace input_string =
 
 let parse_line line = split_string_with_whitespace line
 
+(** parse input into a list of list of words *)
 let parse_input editor =
   let content = get_visible_content editor in
   let parsed_content = List.map parse_line content in
   parsed_content
+
 
 let rec find_position_in_array line cur i pos =
   match line with
@@ -287,6 +308,7 @@ let rec find_position_in_array line cur i pos =
       if cur + String.length x > pos then i
       else find_position_in_array xs (cur + String.length x) (i + 1) pos
 
+(** defines the colors of the highlighted words, braces,... *)
 let highlight_lines lines color_array =
   let map_line i line ii =
     (* the colors can be changed depending on the user theme *)
@@ -299,6 +321,7 @@ let highlight_lines lines color_array =
 
   List.mapi (fun j ll -> List.mapi (fun i line -> map_line i line j) ll) lines
 
+(** find the matching closing brace *)
 let find_matching_close_brace content x y =
   let r = List.rev content in
   let s = Stack.create () in
@@ -321,6 +344,7 @@ let find_matching_close_brace content x y =
   List.iteri iter_lines r;
   Stack.pop_opt s
 
+(** find the matching opening brace *)
 let find_matching_open_brace content x y =
   let s = Stack.create () in
   let iter_lines xx v =
@@ -339,6 +363,7 @@ let find_matching_open_brace content x y =
   List.iteri iter_lines content;
   Stack.pop_opt s
 
+(** find unmatched braces *)
 let find_unmatched_braces content =
   let stack = Stack.create () in
   let unmatched_braces = ref [] in
@@ -368,6 +393,7 @@ let find_unmatched_braces content =
 
   !unmatched_braces
 
+(** mark matching (equal) words *)
 let mark_matched_words parsed_lines codes x pos_word =
   let word = List.nth (List.nth parsed_lines x) pos_word in
   let check_word x y =
@@ -380,7 +406,7 @@ let mark_matched_words parsed_lines codes x pos_word =
         line)
     codes
 
-(* Mark unmatched opening parentheses with a specific color *)
+(** Mark unmatched opening parentheses with a specific color *)
 let mark_unmatched_braces color_codes brace_positions =
     List.mapi
       (fun i line ->
@@ -390,6 +416,7 @@ let mark_unmatched_braces color_codes brace_positions =
           line)
       color_codes
 
+(** highlight the code - some depend on the cursor position *)
 let highlight parsed_lines cursor unmatched_braces =
   let codes = List.map (List.map (fun _ -> Normal)) parsed_lines in
   let line_as_str i = String.concat "" (List.nth parsed_lines i) in
@@ -539,6 +566,5 @@ let () =
       main_loop editor t)
     else (
       editor.content <- [ "" ];
-      (*TODO: fix issue when iserting and this is just []*)
       let t = Term.create () in
       main_loop editor t)
